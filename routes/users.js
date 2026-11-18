@@ -25,15 +25,18 @@ router.get("/:id", (req, res) => {
   res.json(user);
 });
 
-// POST /users — create a user; name and email are required
+// POST /users — create a user; name and email are required and validated
+// the same way as in PUT /users/:id
 router.post("/", (req, res) => {
-  const { name, email } = req.body;
-
-  if (!name || !email) {
-    return res.status(400).json({ error: "name and email are required" });
+  const error = validateUserInput(req.body);
+  if (error) {
+    return res.status(400).json({ error });
   }
 
-  const user = store.createUser({ name, email });
+  const user = store.createUser({
+    name: req.body.name.trim(),
+    email: req.body.email.trim(),
+  });
   res.status(201).json(user);
 });
 
