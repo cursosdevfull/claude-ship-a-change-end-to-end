@@ -3,8 +3,11 @@ const MAX_EMAIL_LENGTH = 254; // practical limit for an email address (RFC 5321)
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Returns an error message for an invalid { name, email } body, or null if valid
-function validateUserInput({ name, email }) {
+// Returns an error message for an invalid { name, email } body, or null if valid.
+// The body can be undefined or null (e.g. no body was parsed), so it is not
+// destructured in the parameter list.
+function validateUserInput(body) {
+  const { name, email } = body ?? {};
   if (name === undefined || email === undefined) {
     return "name and email are required";
   }

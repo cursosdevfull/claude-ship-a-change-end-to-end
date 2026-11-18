@@ -6,6 +6,7 @@ const assert = require("node:assert");
 const request = require("supertest");
 
 const app = require("../server");
+const { validateUserInput } = require("../validators/user");
 
 const VALID = { name: "Katherine Johnson", email: "katherine@example.com" };
 
@@ -105,4 +106,28 @@ test("a malformed JSON body returns a JSON 400, not an HTML page", async () => {
   assert.strictEqual(res.status, 400);
   assert.match(res.headers["content-type"], /application\/json/);
   assert.strictEqual(res.body.error, "Invalid JSON body");
+});
+
+test("validateUserInput does not throw when the body is missing or null", () => {
+  for (const body of [undefined, null]) {
+    assert.strictEqual(
+      validateUserInput(body),
+      "name and email are required",
+      `body ${body} should be reported as missing fields`,
+    );
+  }
+});
+
+test("PUT and POST return 400 when the body is not JSON or is JSON null", async () => {
+  for (const method of ["put", "post"]) {
+    const url = method === "put" ? "/users/1" : "/users";
+    const send = (type, payload) =>
+      request(app)[method](url).set("Content-Type", type).send(payload);
+
+    const text = await send("text/plain", "hola");
+    assert.strictEqual(text.status, 400, `${method} with a text/plain body`);
+
+    const jsonNull = await send("application/json", "null");
+    assert.strictEqual(jsonNull.status, 400, `${method} with a JSON null body`);
+  }
 });
