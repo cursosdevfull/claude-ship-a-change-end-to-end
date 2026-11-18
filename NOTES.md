@@ -18,6 +18,8 @@ What it found, all confirmed by running it:
 - `POST /users` stored `{ name: 123, email: "nope" }`. It now uses the same validation as `PUT`.
 - A 50,000 character name was accepted. Names are capped at 100 characters and emails at 254.
 
+After opening the PR, the automated reviewer flagged one more: `validateUserInput` destructured its argument in the parameter list, so `undefined` or `null` threw a `TypeError` instead of giving a 400. I ran it before changing anything: the function did throw, but over HTTP it was not reachable on Express 4 (`express.json()` leaves `req.body` as `{}`, and a JSON `null` is rejected earlier as "Invalid JSON body"). It is still a real weakness, since Express 5 leaves `req.body` undefined, so I fixed it defensively with `body ?? {}` and wrote the unit test first to see it fail.
+
 The new tests (`tests/user-validation.test.js`) lock these in. I checked they are not vacuous: with the id check and name limit removed on purpose, exactly the 4 related tests failed.
 
 Reviewed and left as is, by choice: two users can share an email (the task does not ask for uniqueness), and an unknown id with an invalid body answers 400, not 404, because input is validated first. PUT replaces both fields; there is no partial update.
