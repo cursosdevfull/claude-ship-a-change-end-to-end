@@ -17,4 +17,12 @@ function validateUserInput({ name, email }) {
   return null;
 }
 
-module.exports = { validateUserInput };
+// Parses a route id. Only plain digits are accepted ("0x1", "1e0" or " 1" are
+// not), and the id must be positive. Returns the number, or null if invalid.
+function parseId(raw) {
+  if (!/^\d+$/.test(raw)) return null;
+  const id = Number(raw);
+  return id > 0 ? id : null;
+}
+
+module.exports = { validateUserInput, parseId };

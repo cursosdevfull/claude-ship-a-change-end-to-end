@@ -1,6 +1,6 @@
 const express = require("express");
 const store = require("../db/store");
-const { validateUserInput } = require("../validators/user");
+const { validateUserInput, parseId } = require("../validators/user");
 
 const router = express.Router();
 
@@ -11,7 +11,11 @@ router.get("/", (req, res) => {
 
 // GET /users/:id — fetch a single user, or 404 if it doesn't exist
 router.get("/:id", (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseId(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ error: "id must be a positive integer" });
+  }
+
   const user = store.getUserById(id);
 
   if (!user) {
@@ -35,8 +39,8 @@ router.post("/", (req, res) => {
 
 // PUT /users/:id — replace a user's name and email; both are required
 router.put("/:id", (req, res) => {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id <= 0) {
+  const id = parseId(req.params.id);
+  if (id === null) {
     return res.status(400).json({ error: "id must be a positive integer" });
   }
 
