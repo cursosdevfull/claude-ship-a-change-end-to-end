@@ -1,3 +1,6 @@
+const MAX_NAME_LENGTH = 100;
+const MAX_EMAIL_LENGTH = 254; // practical limit for an email address (RFC 5321)
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Returns an error message for an invalid { name, email } body, or null if valid
@@ -10,6 +13,12 @@ function validateUserInput({ name, email }) {
   }
   if (!name.trim() || !email.trim()) {
     return "name and email cannot be empty";
+  }
+  if (name.trim().length > MAX_NAME_LENGTH) {
+    return `name must be at most ${MAX_NAME_LENGTH} characters`;
+  }
+  if (email.trim().length > MAX_EMAIL_LENGTH) {
+    return `email must be at most ${MAX_EMAIL_LENGTH} characters`;
   }
   if (!EMAIL_PATTERN.test(email.trim())) {
     return "email must be a valid email address";
