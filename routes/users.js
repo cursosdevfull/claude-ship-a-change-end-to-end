@@ -3,6 +3,25 @@ const store = require("../db/store");
 
 const router = express.Router();
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Returns an error message for an invalid { name, email } body, or null if valid
+function validateUserInput({ name, email }) {
+  if (name === undefined || email === undefined) {
+    return "name and email are required";
+  }
+  if (typeof name !== "string" || typeof email !== "string") {
+    return "name and email must be strings";
+  }
+  if (!name.trim() || !email.trim()) {
+    return "name and email cannot be empty";
+  }
+  if (!EMAIL_PATTERN.test(email.trim())) {
+    return "email must be a valid email address";
+  }
+  return null;
+}
+
 // GET /users — list every user
 router.get("/", (req, res) => {
   res.json(store.getAllUsers());
@@ -30,6 +49,29 @@ router.post("/", (req, res) => {
 
   const user = store.createUser({ name, email });
   res.status(201).json(user);
+});
+
+// PUT /users/:id — replace a user's name and email; both are required
+router.put("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "id must be a positive integer" });
+  }
+
+  const error = validateUserInput(req.body);
+  if (error) {
+    return res.status(400).json({ error });
+  }
+
+  const user = store.updateUser(id, {
+    name: req.body.name.trim(),
+    email: req.body.email.trim(),
+  });
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  res.json(user);
 });
 
 module.exports = router;
